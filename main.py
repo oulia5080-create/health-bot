@@ -47,7 +47,10 @@ async def start_cmd(message: types.Message):
     )
 
 @dp.message(Command("task"))
-async def get_task(message: types.Message):
+@dp.message(Command("myid"))
+async def myid_cmd(message: types.Message):
+    await message.answer(f"Твой ID: {message.from_user.id}")
+    async def get_task(message: types.Message):
     await message.answer(random.choice(tasks))
 
 @dp.message(Command("done"))
