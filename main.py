@@ -1,42 +1,35 @@
+import os
 import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-import random
-import datetime
+from aiogram.filters import CommandStart
+from aiohttp import web
 
-# Твой личный ключ, который ты получил
-API_TOKEN = '8543661868:AAEUgL2Ijxa1UyuDMIm7QRQLd6c3_-TPTjE'
+# Твой токен
+TOKEN = os.getenv("BOT_TOKEN")
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Данные из твоих фото
-TASKS = {
-    "Зима": ["Покормить птиц", "Наесться мандаринов", "Сходить на каток", "SPA-комплекс"],
-    "Весна": ["Ранковая пробежка", "Приготувати млинці", "Генеральне прибирання", "Прогулка в парке"],
-    "Лето": ["Зробити вітамінний смузі", "Покататись на гойдалці", "Зустріти світанок", "Велопрогулка"],
-    "Осень": ["Приготувати гарбузовий суп", "Записатись у спортзал", "Сходити в ліс", "Вечер благодарности"]
-}
+@dp.message(CommandStart())
+async def start_cmd(message: types.Message):
+    await message.answer("Бот здоровья на связи! Теперь я не отключусь. 🚀")
 
-@dp.message(Command("start"))
-async def start(message: types.Message):
-    await message.answer("✅ Бот активен! Напиши /task, чтобы получить задание для вашего здоровья.")
-
-@dp.message(Command("task"))
-async def send_task(message: types.Message):
-    # Определяем сезон
-    month = datetime.datetime.now().month
-    season = "Зима" if month in [12, 1, 2] else "Весна" if month in [3, 4, 5] else "Лето" if month in [6, 7, 8] else "Осень"
-    
-    task = random.choice(TASKS[season])
-    await message.answer(f"🌟 Сезон: {season}\n👉 Ваше задание: {task}\n\nЭто поможет вам переключиться и укрепить здоровье! 💪")
+# Костыль для Render, чтобы он не выключал бота
+async def handle(request):
+    return web.Response(text="Bot is running!")
 
 async def main():
-    print("Бот запускается... Проверь Telegram!")
+    # Запускаем веб-сервер для "галочки" Render
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', os.getenv("PORT", "10000"))
+    
+    asyncio.create_task(site.start())
+    
+    # Запускаем бота
     await dp.start_polling(bot)
 
-if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except:
-        print("Бот остановлен")
+if __name__ == "__main__":
+    asyncio.run(main())
